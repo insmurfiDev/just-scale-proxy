@@ -1,0 +1,17 @@
+syntax="proto3";
+
+package my_package;
+
+option go_package = "my_package/";
+
+service MyService {
+    rpc SomeMethod(SomeReq) returns (SomeRes);
+}
+
+message SomeReq {
+    int64 id = 1;
+}
+
+message SomeRes {
+    int64 res = 1;
+}
