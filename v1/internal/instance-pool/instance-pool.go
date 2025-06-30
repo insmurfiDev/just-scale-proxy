@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/insmurfiDev/just-scale-proxy/pkg/common"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
 )
 
 // Хранилище подключенных микросервисов

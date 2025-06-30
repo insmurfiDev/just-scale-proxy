@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/insmurfiDev/just-scale-proxy/pkg/common"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
 )
 
 // Информация о подключенном клиенте

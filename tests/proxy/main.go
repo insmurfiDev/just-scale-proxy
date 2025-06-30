@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/insmurfiDev/just-scale-proxy/pkg/common"
-	"github.com/insmurfiDev/just-scale-proxy/pkg/loadbalancer"
-	"github.com/insmurfiDev/just-scale-proxy/pkg/proxy"
 	"github.com/insmurfiDev/just-scale-proxy/tests/generated/my_package"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/loadbalancer"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/proxy"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

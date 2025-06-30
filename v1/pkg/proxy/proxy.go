@@ -3,8 +3,8 @@ package proxy
 import (
 	"context"
 
-	p "github.com/insmurfiDev/just-scale-proxy/internal/proxy"
-	"github.com/insmurfiDev/just-scale-proxy/pkg/common"
+	p "github.com/insmurfiDev/just-scale-proxy/v1/internal/proxy"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
 )
 
 type Proxy[Client comparable] interface {

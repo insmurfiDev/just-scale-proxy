@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/insmurfiDev/just-scale-proxy/pkg/loadbalancer"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/loadbalancer"
 )
 
 // Хост микросервиса

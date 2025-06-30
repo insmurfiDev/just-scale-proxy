@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/insmurfiDev/just-scale-proxy/pkg/common"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
 )
 
 type Worker struct {

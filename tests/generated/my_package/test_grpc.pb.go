@@ -24,7 +24,7 @@ const (
 
 // MyServiceClient is the client API for MyService service.
 //
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://v1/pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MyServiceClient interface {
 	SomeMethod(ctx context.Context, in *SomeReq, opts ...grpc.CallOption) (*SomeRes, error)
 }

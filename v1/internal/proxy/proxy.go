@@ -3,10 +3,10 @@ package internal
 import (
 	"context"
 
-	clientpool "github.com/insmurfiDev/just-scale-proxy/internal/client-pool"
-	instancepool "github.com/insmurfiDev/just-scale-proxy/internal/instance-pool"
-	"github.com/insmurfiDev/just-scale-proxy/pkg/common"
-	"github.com/insmurfiDev/just-scale-proxy/pkg/loadbalancer"
+	clientpool "github.com/insmurfiDev/just-scale-proxy/v1/internal/client-pool"
+	instancepool "github.com/insmurfiDev/just-scale-proxy/v1/internal/instance-pool"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
+	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/loadbalancer"
 )
 
 type Proxy[Client comparable] struct {
