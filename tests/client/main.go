@@ -15,7 +15,7 @@ import (
 
 func main() {
 
-	for i := range 100 {
+	for i := range 1 {
 		go conenctClient(9300 + i)
 	}
 

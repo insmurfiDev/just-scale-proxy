@@ -28,8 +28,7 @@ type ProxyConfig[Client comparable] struct {
 	Port int
 
 	OnConnected    func(context.Context, Host)
-	OnDisconnected func(context.Context, Host)
-	OnError        func(context.Context, Host, error)
+	OnDisconnected func(context.Context, Host, error)
 }
 
 type WorkerConfig struct {

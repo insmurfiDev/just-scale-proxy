@@ -47,6 +47,9 @@ func main() {
 		OnConnected: func(ctx context.Context, h common.Host) {
 			fmt.Println("connected", h.IP, h.Port)
 		},
+		OnDisconnected: func(ctx context.Context, h common.Host, err error) {
+			fmt.Println("disconnected", h.IP, h.Port)
+		},
 		IP:   "0.0.0.0",
 		Port: 9500,
 	}

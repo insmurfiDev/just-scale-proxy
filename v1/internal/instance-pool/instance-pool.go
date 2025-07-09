@@ -50,19 +50,7 @@ func (p *InstancePool) Listen(ctx context.Context) {
 }
 
 func (p *InstancePool) handleConn(ctx context.Context, conn net.Conn) {
-	defer func() {
-		conn.Close()
-		p.disconnectConn(conn)
-
-		if p.cfg.OnDisconnected != nil {
-			host, ok := p.getHostByConn(conn)
-			if !ok {
-				return
-			}
-			p.cfg.OnDisconnected(ctx, host)
-		}
-
-	}()
+	defer conn.Close()
 
 	buf := make([]byte, 1024)
 
@@ -73,14 +61,14 @@ func (p *InstancePool) handleConn(ctx context.Context, conn net.Conn) {
 		default:
 			n, err := conn.Read(buf)
 			if err != nil {
-				p.disconnectConn(conn)
-				if p.cfg.OnError != nil {
+				if p.cfg.OnDisconnected != nil {
 					host, ok := p.getHostByConn(conn)
 					if !ok {
 						return
 					}
-					p.cfg.OnError(ctx, host, err)
+					p.cfg.OnDisconnected(ctx, host, err)
 				}
+				p.disconnectConn(conn)
 				return
 			}
 
@@ -128,7 +116,6 @@ func (p *InstancePool) saveConn(conn net.Conn, host common.Host) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.conns[conn] = host
-
 	p.connectChan <- host
 }
 
@@ -159,8 +146,7 @@ type InstancePoolConfig struct {
 	IP                   string
 	Port                 int
 	OnConnected          func(context.Context, common.Host)
-	OnDisconnected       func(context.Context, common.Host)
-	OnError              func(context.Context, common.Host, error)
+	OnDisconnected       func(context.Context, common.Host, error)
 }
 
 func NewInstancePool(cfg InstancePoolConfig) *InstancePool {

@@ -74,7 +74,6 @@ func NewProxy[Client comparable](cfg common.ProxyConfig[Client]) *Proxy[Client] 
 			Port:                 cfg.Port,
 			OnConnected:          cfg.OnConnected,
 			OnDisconnected:       cfg.OnDisconnected,
-			OnError:              cfg.OnError,
 		}),
 		createClientFn: cfg.CreateClientFn,
 		loadBalancer:   cfg.LoadBalancer,
