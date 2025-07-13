@@ -43,4 +43,5 @@ type WorkerConfig struct {
 
 	OnConnected    func(context.Context)
 	OnDisconnected func(context.Context)
+	OnError        func(context.Context, error)
 }

@@ -1,11 +1,11 @@
 package worker
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/insmurfiDev/just-scale-proxy/v1/pkg/common"
@@ -16,29 +16,67 @@ type Worker struct {
 	proxyHost string
 	cfg       common.WorkerConfig
 
+	isConnected atomic.Bool
+
 	conn net.Conn
 }
 
-func (w *Worker) Connect(ctx context.Context) error {
-	if w.conn != nil {
-		_ = w.conn.Close()
+func (w *Worker) onError(ctx context.Context, err error) {
+	if w.cfg.OnError != nil {
+		w.cfg.OnError(ctx, err)
+	}
+}
+
+func (w *Worker) onConnected(ctx context.Context) {
+	if w.cfg.OnConnected != nil {
+		w.cfg.OnConnected(ctx)
+	}
+}
+
+func (w *Worker) onDisconnected(ctx context.Context) {
+	if w.cfg.OnDisconnected != nil {
+		w.cfg.OnDisconnected(ctx)
+	}
+}
+
+func (w *Worker) Disconnect(ctx context.Context) {
+	if w.isConnected.Load() {
+		w.onDisconnected(ctx)
 	}
 
+	if w.conn != nil {
+		w.conn.Close()
+		w.conn = nil
+	}
+	w.isConnected.Store(false)
+}
+
+func (w *Worker) Connect(ctx context.Context) {
 	conn, err := net.Dial("tcp", w.proxyHost)
 	if err != nil {
-		return fmt.Errorf("failed to connect to proxy: %w", err)
+		w.onError(ctx, fmt.Errorf("failed to connect to proxy: %w", err))
+		w.Disconnect(ctx)
+		return
 	}
 	w.conn = conn
 
 	if _, err := conn.Write([]byte(w.host)); err != nil {
-		return fmt.Errorf("failed to write host info: %w", err)
+		w.onError(ctx, fmt.Errorf("failed to write host info: %w", err))
+		w.Disconnect(ctx)
+		return
 	}
 
-	if w.cfg.OnConnected != nil {
-		w.cfg.OnConnected(ctx)
-	}
+	w.isConnected.Store(true)
+	w.onConnected(ctx)
+}
 
-	return nil
+func (w *Worker) handleRetry(ctx context.Context) {
+	if w.cfg.Retry {
+		for !w.isConnected.Load() {
+			time.Sleep(w.cfg.RetryInterval)
+			w.Connect(ctx)
+		}
+	}
 }
 
 func (w *Worker) Run(ctx context.Context) {
@@ -49,34 +87,26 @@ func (w *Worker) Run(ctx context.Context) {
 
 	go func() {
 		defer wg.Done()
+
+		w.Connect(ctx)
+		if !w.isConnected.Load() {
+			w.handleRetry(ctx)
+		}
+
+		buf := make([]byte, 1024)
 		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				if w.conn == nil {
-					if w.cfg.OnDisconnected != nil {
-						w.cfg.OnDisconnected(ctx)
-					}
-					if w.cfg.Retry {
-						if err := w.Connect(ctx); err != nil {
-							time.Sleep(w.cfg.RetryInterval)
-							continue
-						}
-					}
-				}
-
-				reader := bufio.NewReader(w.conn)
-				_, err := reader.ReadByte()
-
-				if err != nil {
-					w.conn.Close()
-					w.conn = nil
-					time.Sleep(w.cfg.RetryInterval)
-					continue
-				}
+			if w.conn == nil {
+				continue
+			}
+			_, err := w.conn.Read(buf)
+			if err != nil {
+				w.onError(ctx, fmt.Errorf("failed to read from proxy: %w", err))
+				w.Disconnect(ctx)
+				w.handleRetry(ctx)
+				continue
 			}
 		}
+
 	}()
 
 	go func() {

@@ -37,6 +37,9 @@ func conenctClient(port int) {
 		OnDisconnected: func(ctx context.Context) {
 			fmt.Println("disconnected", port)
 		},
+		OnError: func(ctx context.Context, err error) {
+			fmt.Println("err", err)
+		},
 	}
 
 	w := worker.NewWorker(cfg)
