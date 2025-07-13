@@ -11,6 +11,7 @@ type Proxy[Client comparable] interface {
 	GetClient(context.Context, any) Client
 	GetClientByHost(host common.Host) (Client, bool)
 	GetAnyClient() Client
+	Msg() <-chan common.WorkerMsg
 	Run(context.Context)
 }
 
