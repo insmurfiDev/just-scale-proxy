@@ -65,6 +65,12 @@ func (p *Proxy[Client]) Run(ctx context.Context) {
 
 }
 
+func (p *Proxy[Client]) GetClientByHost(host common.Host) (Client, bool) {
+	info, ok := p.clientPool.GetByHost(host)
+
+	return info.Client, ok
+}
+
 func NewProxy[Client comparable](cfg common.ProxyConfig[Client]) *Proxy[Client] {
 	return &Proxy[Client]{
 		clientPool: clientpool.NewClientPool[Client](cfg.PossibleClientCount, cfg.HashFn),

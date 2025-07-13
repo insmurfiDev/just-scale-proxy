@@ -9,6 +9,7 @@ import (
 
 type Proxy[Client comparable] interface {
 	GetClient(context.Context, any) Client
+	GetClientByHost(host common.Host) (Client, bool)
 	GetAnyClient() Client
 	Run(context.Context)
 }

@@ -71,6 +71,19 @@ func (c *ClientPool[Client]) DeleteByHost(ctx context.Context, host common.Host)
 
 }
 
+func (c *ClientPool[Client]) GetByHost(host common.Host) (ClientInfo[Client], bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	for _, info := range c.clients {
+		if info.Host == host {
+			return info, true
+		}
+	}
+
+	return ClientInfo[Client]{}, false
+}
+
 // Получает клиента по индексу
 func (c *ClientPool[Client]) GetByIdx(idx int) ClientInfo[Client] {
 	c.mu.RLock()
