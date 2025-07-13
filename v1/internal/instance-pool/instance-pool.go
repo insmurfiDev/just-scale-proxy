@@ -21,15 +21,19 @@ type InstancePool struct {
 
 	connectChan    chan common.Host
 	disconenctChan chan common.Host
+	msgChan        chan common.WorkerMsg
 
 	cfg InstancePoolConfig
 }
 
 // Метод для обработки входящих соединений
 func (p *InstancePool) Listen(ctx context.Context) {
-	defer p.listener.Close()
-	defer close(p.connectChan)
-	defer close(p.disconenctChan)
+	defer func() {
+		p.listener.Close()
+		close(p.connectChan)
+		close(p.disconenctChan)
+		close(p.msgChan)
+	}()
 
 	for {
 		select {
@@ -53,7 +57,7 @@ func (p *InstancePool) handleConn(ctx context.Context, conn net.Conn) {
 	defer conn.Close()
 
 	buf := make([]byte, 1024)
-
+	var host common.Host
 	for {
 		select {
 		case <-ctx.Done():
@@ -77,28 +81,36 @@ func (p *InstancePool) handleConn(ctx context.Context, conn net.Conn) {
 			if message == "ping" {
 				conn.Write([]byte("pong"))
 			} else {
+				if host.IP != "" {
+					select {
+					case p.msgChan <- common.WorkerMsg{
+						Msg:  buf[:n],
+						Host: host,
+					}:
+					default:
+					}
+				} else {
+					arr := strings.Split(message, ":")
 
-				arr := strings.Split(message, ":")
+					if len(arr) != 2 {
+						continue
+					}
 
-				if len(arr) != 2 {
-					continue
+					port, err := strconv.Atoi(arr[1])
+
+					if err != nil {
+						continue
+					}
+					host = common.Host{
+						IP:   arr[0],
+						Port: port,
+					}
+					p.saveConn(conn, host)
+
+					if p.cfg.OnConnected != nil {
+						p.cfg.OnConnected(ctx, host)
+					}
 				}
-
-				port, err := strconv.Atoi(arr[1])
-
-				if err != nil {
-					continue
-				}
-				host := common.Host{
-					IP:   arr[0],
-					Port: port,
-				}
-				p.saveConn(conn, host)
-
-				if p.cfg.OnConnected != nil {
-					p.cfg.OnConnected(ctx, host)
-				}
-
 			}
 		}
 	}
@@ -141,6 +153,10 @@ func (p *InstancePool) DisconnectChan() <-chan common.Host {
 	return p.disconenctChan
 }
 
+func (p *InstancePool) Msg() <-chan common.WorkerMsg {
+	return p.msgChan
+}
+
 type InstancePoolConfig struct {
 	PossibleWorkersCount int
 	IP                   string
@@ -161,6 +177,7 @@ func NewInstancePool(cfg InstancePoolConfig) *InstancePool {
 		conns:          make(map[net.Conn]common.Host, cfg.PossibleWorkersCount),
 		connectChan:    make(chan common.Host),
 		disconenctChan: make(chan common.Host),
+		msgChan:        make(chan common.WorkerMsg),
 		cfg:            cfg,
 	}
 }

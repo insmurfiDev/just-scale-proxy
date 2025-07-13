@@ -71,6 +71,10 @@ func (p *Proxy[Client]) GetClientByHost(host common.Host) (Client, bool) {
 	return info.Client, ok
 }
 
+func (p *Proxy[Client]) Msg() <-chan common.WorkerMsg {
+	return p.instancePool.Msg()
+}
+
 func NewProxy[Client comparable](cfg common.ProxyConfig[Client]) *Proxy[Client] {
 	return &Proxy[Client]{
 		clientPool: clientpool.NewClientPool[Client](cfg.PossibleClientCount, cfg.HashFn),

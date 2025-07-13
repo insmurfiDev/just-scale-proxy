@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -68,6 +69,16 @@ func (w *Worker) Connect(ctx context.Context) {
 
 	w.isConnected.Store(true)
 	w.onConnected(ctx)
+}
+
+func (w *Worker) SendToProxy(ctx context.Context, msg []byte) error {
+	if !w.isConnected.Load() {
+		return errors.New("can not send message while not connected")
+	}
+
+	_, err := w.conn.Write(msg)
+
+	return err
 }
 
 func (w *Worker) handleRetry(ctx context.Context) {

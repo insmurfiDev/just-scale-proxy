@@ -9,6 +9,7 @@ import (
 
 type Worker interface {
 	Run(context.Context)
+	SendToProxy(context.Context, []byte) error
 }
 
 func NewWorker(cfg common.WorkerConfig) Worker {

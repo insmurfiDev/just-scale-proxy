@@ -45,3 +45,8 @@ type WorkerConfig struct {
 	OnDisconnected func(context.Context)
 	OnError        func(context.Context, error)
 }
+
+type WorkerMsg struct {
+	Host Host
+	Msg  []byte
+}
