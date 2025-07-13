@@ -12,7 +12,7 @@ type RoundRobbin struct {
 func (r *RoundRobbin) Next() int {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.idx == r.size-1 {
+	if r.idx >= r.size-1 {
 		r.idx = 0
 	} else {
 		r.idx++

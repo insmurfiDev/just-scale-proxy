@@ -46,12 +46,12 @@ func (c *ClientPool[Client]) Add(client ClientInfo[Client]) {
 //
 // Получает клиента используя хеш-функцию
 func (c *ClientPool[Client]) Get(ctx context.Context, req any) ClientInfo[Client] {
-	hash := c.hashFn(ctx, req)
+	hashFn := c.hashFn
+	hash := hashFn(ctx, req)
+
 	c.mu.RLock()
-	defer c.mu.RUnlock()
-
 	idx := hash % len(c.clients)
-
+	c.mu.RUnlock()
 	return c.GetByIdx(idx)
 }
 

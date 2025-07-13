@@ -14,21 +14,47 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type Client struct {
+	Client my_package.MyServiceClient
+	Port   int64
+}
+
 //go:generate protoc --go_out=../generated --go-grpc_out=../generated --proto_path=../ test.proto
 func main() {
 
 	ctx := context.Background()
 
-	cfg := common.ProxyConfig[my_package.MyServiceClient]{
+	cfg := common.ProxyConfig[*Client]{
 		HashFn: func(ctx context.Context, req any) int {
 			id, ok := req.(int64)
 			if !ok {
 				fmt.Println("err parse to int", req)
 				return 0
 			}
+
+			if id < 1 {
+				return 0
+			}
+
+			if id < 2 {
+				return 1
+			}
+
+			if id < 3 {
+				return 2
+			}
+
+			if id < 4 {
+				return 3
+			}
+
+			if id < 5 {
+				return 4
+			}
+
 			return int(id)
 		},
-		CreateClientFn: func(ctx context.Context, ip string, port int) (my_package.MyServiceClient, error) {
+		CreateClientFn: func(ctx context.Context, ip string, port int) (*Client, error) {
 			cc, err := grpc.NewClient(
 				fmt.Sprintf("%s:%d", ip, port),
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -40,7 +66,10 @@ func main() {
 			}
 
 			client := my_package.NewMyServiceClient(cc)
-			return client, nil
+			return &Client{
+				Client: client,
+				Port:   int64(port),
+			}, nil
 
 		},
 		LoadBalancer: loadbalancer.NewRoundRobbin(),
@@ -75,7 +104,7 @@ type Server struct {
 	my_package.UnimplementedMyServiceServer
 	listener net.Listener
 	server   *grpc.Server
-	proxy    proxy.Proxy[my_package.MyServiceClient]
+	proxy    proxy.Proxy[*Client]
 }
 
 func (s *Server) Run() {
@@ -84,13 +113,14 @@ func (s *Server) Run() {
 }
 
 func (s *Server) SomeMethod(ctx context.Context, req *my_package.SomeReq) (*my_package.SomeRes, error) {
-	slog.Info("get client")
-	client := s.proxy.GetClient(ctx, req.Id)
-	slog.Info("got client", client)
-	return client.SomeMethod(ctx, req)
+	// client := s.proxy.GetClient(ctx, req.Id) // sticky
+	client := s.proxy.GetAnyClient() // round
+	port := client.Port
+	slog.Info("Перенаправил запрос", slog.Int64("id", req.Id), slog.Int64("port", port))
+	return client.Client.SomeMethod(ctx, req)
 }
 
-func newServer(proxy proxy.Proxy[my_package.MyServiceClient]) (*Server, error) {
+func newServer(proxy proxy.Proxy[*Client]) (*Server, error) {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", 9505))
 
 	if err != nil {

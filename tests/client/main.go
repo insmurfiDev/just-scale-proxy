@@ -15,7 +15,7 @@ import (
 
 func main() {
 
-	for i := range 1 {
+	for i := range 5 {
 		go conenctClient(9300 + i)
 	}
 
@@ -64,7 +64,7 @@ func (s *Server) Run() {
 }
 
 func (s *Server) SomeMethod(ctx context.Context, req *my_package.SomeReq) (*my_package.SomeRes, error) {
-	slog.Info("handle method", slog.Int("port", s.port))
+	slog.Info("Обработал запрос", slog.Int("port", s.port), slog.Int("id", int(req.GetId())))
 	return &my_package.SomeRes{
 		Res: 1,
 	}, nil
